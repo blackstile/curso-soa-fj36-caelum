@@ -1,2 +1,5 @@
 /apache-tomcat-7.0.50
 /tools
+.metadata/
+RemoteSystemsTempFiles/
+Servers/

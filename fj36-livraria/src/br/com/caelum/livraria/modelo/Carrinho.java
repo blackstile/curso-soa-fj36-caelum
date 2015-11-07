@@ -2,7 +2,6 @@ package br.com.caelum.livraria.modelo;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.rmi.Naming;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedHashSet;
@@ -13,10 +12,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import br.com.caelum.estoque.rmi.EstoqueRmi;
-import br.com.caelum.estoque.rmi.ItemEstoque;
+import br.com.caelum.correios.soap.ConsumidorServicoCorreios;
 import br.com.caelum.livraria.jms.EnviadorMensagemJms;
 import br.com.caelum.livraria.rest.ClienteRest;
+import br.com.caelum.soap.EstoqueWs;
+import br.com.caelum.soap.EstoqueWsService;
+import br.com.caelum.soap.ItemEstoque;
+import br.com.caelum.soap.ItensEstoque;
+import br.com.caelum.soap.ItensEstoqueResponse;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 @Component
 @Scope("session")
@@ -52,15 +58,30 @@ public class Carrinho implements Serializable {
 		cancelarPagamento();
 	}
 	
-	public void verificarDisponibilidadeDosItensComRmi() throws Exception{
+//	public void verificarDisponibilidadeDosItensComRmi() throws Exception{
+//		
+//		EstoqueRmi estoque  = (EstoqueRmi) Naming.lookup("rmi://localhost:1099/estoque");
+//		for (ItemCompra itemCompra : itensDeCompra) {
+//			if (itemCompra.isImpresso()){
+//				System.out.println("Verificação da quantidade do Livro: " + itemCompra.getTitulo());
+//				ItemEstoque itemEstoque = estoque.getItemEstoque(itemCompra.getCodigo());
+//				itemCompra.setQuantidadeNoEstoque(itemEstoque.getQuantidade());
+//			}
+//		}
+//		
+//	}
+	
+	public void verificarDisponibilidadeDosItensComSoap(){
+		EstoqueWs estoqueWs = new EstoqueWsService().getEstoqueWsPort();
+		List<String> codigos = this.getCodigosDosItensImpressos();
 		
-		EstoqueRmi estoque  = (EstoqueRmi) Naming.lookup("rmi://localhost:1099/estoque");
-		for (ItemCompra itemCompra : itensDeCompra) {
-			if (itemCompra.isImpresso()){
-				System.out.println("Verificação da quantidade do Livro: " + itemCompra.getTitulo());
-				ItemEstoque itemEstoque = estoque.getItemEstoque(itemCompra.getCodigo());
-				itemCompra.setQuantidadeNoEstoque(itemEstoque.getQuantidade());
-			}
+		ItensEstoque parameter = new ItensEstoque();
+		parameter.getCodigos().addAll(codigos);
+		
+		ItensEstoqueResponse resposta =  estoqueWs.itensEstoque(parameter, "token123");
+		List<ItemEstoque> itemEstoque = resposta.getItemEstoque();
+		for (ItemEstoque itemEstoque2 : itemEstoque) {
+			atualizarQuantidadeDisponivelDoItemCompra(itemEstoque2);
 		}
 		
 	}
@@ -113,7 +134,8 @@ public class Carrinho implements Serializable {
 
 	public void atualizarFrete(final String novoCepDestino) {
 		this.cepDestino = novoCepDestino;
-
+		ConsumidorServicoCorreios servicoCorreios = new ConsumidorServicoCorreios();
+		this.valorFrete =servicoCorreios.calculaFrete(novoCepDestino);
 		//servico web do correios aqui
 	}
 
@@ -169,17 +191,17 @@ public class Carrinho implements Serializable {
 		return false;
 	}
 
-//	private void atualizarQuantidadeDisponivelDoItemCompra(final ItemEstoque itemEstoque) {
-//		ItemCompra item = Iterables.find(this.itensDeCompra, new Predicate<ItemCompra>() {
-//
-//			@Override
-//			public boolean apply(ItemCompra item) {
-//				return item.temCodigo(itemEstoque.getCodigo());
-//			}
-//		});
-//
-//		item.setQuantidadeNoEstoque(itemEstoque.getQuantidade());
-//	}
+	private void atualizarQuantidadeDisponivelDoItemCompra(final ItemEstoque itemEstoque) {
+		ItemCompra item = Iterables.find(this.itensDeCompra, new Predicate<ItemCompra>() {
+
+			@Override
+			public boolean apply(ItemCompra item) {
+				return item.temCodigo(itemEstoque.getCodigo());
+			}
+		});
+
+		item.setQuantidadeNoEstoque(itemEstoque.getQuantidade());
+	}
 
 	private void limparCarrinho() {
 		this.itensDeCompra = new LinkedHashSet<>();
@@ -210,7 +232,6 @@ public class Carrinho implements Serializable {
 		return null;
 	}
 
-	@SuppressWarnings("unused")
 	private List<String> getCodigosDosItensImpressos() {
 		List<String> codigos = new ArrayList<>();
 

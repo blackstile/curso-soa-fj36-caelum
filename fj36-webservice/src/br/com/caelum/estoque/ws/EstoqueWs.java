@@ -1,15 +1,21 @@
 package br.com.caelum.estoque.ws;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.jws.WebMethod;
+import javax.jws.WebParam;
+import javax.jws.WebResult;
 import javax.jws.WebService;
+
+import br.com.caelum.estoque.ws.fault.AutorizacaoException;
 
 
 @Stateless
-@WebService
+@WebService(targetNamespace="http://caelum.com.br/estoquews/v1")
 public class EstoqueWs {
 
 	private Map<String, ItemEstoque> repositorio = new HashMap<String, ItemEstoque>();
@@ -23,9 +29,18 @@ public class EstoqueWs {
 		repositorio.put("WEB", new ItemEstoque("WEB", 4));
 	}
 	
-	@WebMethod
-	public ItemEstoque getQuantidade(String codigo){
-		return repositorio.get(codigo);
+	@WebMethod(operationName="itensEstoque")
+	@WebResult(name="itemEstoque")
+	public List<ItemEstoque> getQuantidade(
+			@WebParam(name="codigos") List<String> codigos, 
+			@WebParam(name="tokenUsuario", header=true) String token){
+		if (token == null || !token.equalsIgnoreCase("token123")){
+			throw new AutorizacaoException("Não autorizado");
+		}
+		return codigos.stream()
+				.map(codigo->repositorio.get(codigo))
+				.collect(Collectors.toList());
+
 	}
 	
 

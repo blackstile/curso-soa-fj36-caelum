@@ -72,6 +72,9 @@ public class Carrinho implements Serializable {
 //	}
 	
 	public void verificarDisponibilidadeDosItensComSoap(){
+		if (!temItensImpressos()){
+			return;
+		}
 		EstoqueWs estoqueWs = new EstoqueWsService().getEstoqueWsPort();
 		List<String> codigos = this.getCodigosDosItensImpressos();
 		
@@ -84,6 +87,10 @@ public class Carrinho implements Serializable {
 			atualizarQuantidadeDisponivelDoItemCompra(itemEstoque2);
 		}
 		
+	}
+	
+	public boolean temItensImpressos(){
+		return this.getCodigosDosItensImpressos() != null && !this.getCodigosDosItensImpressos().isEmpty();
 	}
 
 	public void removerItemPeloCodigoEFormato(String codigo, Formato formato) {

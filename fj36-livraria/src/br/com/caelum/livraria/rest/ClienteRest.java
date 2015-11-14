@@ -2,9 +2,13 @@ package br.com.caelum.livraria.rest;
 
 import java.io.Serializable;
 
-import org.springframework.stereotype.Component;
-import org.springframework.context.annotation.Scope;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import br.com.caelum.livraria.modelo.Link;
 import br.com.caelum.livraria.modelo.Pagamento;
 import br.com.caelum.livraria.modelo.Transacao;
 
@@ -19,11 +23,25 @@ public class ClienteRest implements Serializable {
 	private static final String ENTRY_POINT = "/pagamentos/";
 
 	public Pagamento criarPagamento(Transacao transacao) {
-		return null;
+		return ClientBuilder.newClient()
+				.target(SERVER_URI + ENTRY_POINT)
+				.request()
+				.buildPost(Entity.json(transacao))
+				.invoke(Pagamento.class);
+		
 	}
 
 	public Pagamento confirmarPagamento(Pagamento pagamento) {
-		return null;
+		Link linkConfirmar = pagamento.getLinkPeloRel("confirmar");
+		Pagamento resposta = ClientBuilder.newClient()
+					.target(SERVER_URI + linkConfirmar.getUri())
+					.request()
+					.build(linkConfirmar.getMethod())
+					.invoke(Pagamento.class);
+		
+		System.out.println("Pagamento confirmado, id: " + resposta.getId());
+		
+		return resposta;
 	}
 
 }

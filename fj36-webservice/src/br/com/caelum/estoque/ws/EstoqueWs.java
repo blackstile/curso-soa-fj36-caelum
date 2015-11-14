@@ -10,6 +10,7 @@ import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebResult;
 import javax.jws.WebService;
+import javax.ws.rs.BadRequestException;
 
 import br.com.caelum.estoque.ws.fault.AutorizacaoException;
 
@@ -36,6 +37,9 @@ public class EstoqueWs {
 			@WebParam(name="tokenUsuario", header=true) String token){
 		if (token == null || !token.equalsIgnoreCase("token123")){
 			throw new AutorizacaoException("Não autorizado");
+		}
+		if (codigos == null || codigos.isEmpty()){
+			throw new BadRequestException("Informe ao menos um código do livro por favor!");
 		}
 		return codigos.stream()
 				.map(codigo->repositorio.get(codigo))

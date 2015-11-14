@@ -10,6 +10,7 @@ import javax.ejb.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -51,6 +52,7 @@ public class PagamentoResource {
 		Pagamento pagamento = new Pagamento();
 		pagamento.setId(idPagamento++);
 		pagamento.setValor(transacao.getValor());
+		pagamento.comStatusCriado();
 		addPagamento(pagamento);
 		System.out.println("PAGAMENTO CRIADO: " +  pagamento);
 		
@@ -59,6 +61,16 @@ public class PagamentoResource {
 				.type(MediaType.APPLICATION_JSON_TYPE)
 				.build();
 				
+	}
+	
+	@PUT
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Pagamento confirmarPagamento(@PathParam("id") Integer pagamentoId){
+		Pagamento pagamento = repositorio.get(pagamentoId);
+		pagamento.comStatusConfirmado();
+		System.out.println("Pagamento confirmado: " + pagamento);
+		return pagamento;
 	}
 	
 	

@@ -3,3 +3,7 @@
 .metadata/
 RemoteSystemsTempFiles/
 Servers/
+*.class
+fj36-livraria/build/classes/
+fj36-livraria/.settings
+fj36-livraria/.classpath

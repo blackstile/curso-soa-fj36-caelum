@@ -13,7 +13,7 @@ public class TesteRoteamento {
 			@Override
 			public void configure() throws Exception {
 				from("file:entrada?delay=5s")
-				.log(LoggingLevel.INFO, "Processando mensagem ${id}")
+				.log(LoggingLevel.INFO, "Processando mensagem ${file:onlyname.noext}")
 				.to("file:saida");
 			}
 		});

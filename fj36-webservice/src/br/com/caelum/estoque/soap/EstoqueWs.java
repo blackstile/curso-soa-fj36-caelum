@@ -28,7 +28,7 @@ public interface EstoqueWs {
      * @param tokenUsuario
      * @param parameters
      * @return
-     *     returns br.com.caelum.ws.implementation.ItensEstoqueResponse
+     *     returns br.com.caelum.estoque.soap.ItensEstoqueResponse
      */
     @WebMethod
     @WebResult(name = "itensEstoqueResponse", targetNamespace = "http://caelum.com.br/estoquews/v1", partName = "parameters")
